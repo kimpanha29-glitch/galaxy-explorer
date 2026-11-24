@@ -38,14 +38,14 @@ try {
   const supabaseClient=window.supabase.createClient("https://rwabjvpsbtlyrchiwhjt.supabase.co","sb_publishable_mdXgbWmU-LVuTQaXd6nn0w_Mw4G6Uwa");
   const liveChannel=supabaseClient.channel("galaxy-explorer-live",{config:{presence:{key:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random())}}});
   liveChannel.on("presence",{event:"sync"},()=>{
-    const presence=supabaseClient.channel("galaxy-explorer-live");
     const state=liveChannel.presenceState();
     const count=Object.values(state).reduce((total,entries)=>total+entries.length,0);
     liveCountEl.textContent=String(count);
   }).subscribe(async status=>{
     if(status==="SUBSCRIBED") await liveChannel.track({online_at:new Date().toISOString()});
-    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT") liveCountEl.textContent="Offline";
+    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED") liveCountEl.textContent="Offline";
   });
+  setTimeout(()=>{if(liveCountEl.textContent==="Connecting…")liveCountEl.textContent="Offline";},8000);
   const chatPanel=document.getElementById("chatPanel");
   const chatMessages=document.getElementById("chatMessages");
   const chatInput=document.getElementById("chatInput");
@@ -61,7 +61,8 @@ try {
   }
   chatChannel.on("broadcast",{event:"chat-message"},({payload})=>{
     if(payload&&typeof payload.name==="string"&&typeof payload.message==="string")addChatMessage(payload.name.slice(0,24),payload.message.slice(0,160));
-  }).subscribe(status=>{chatStatus.textContent=status==="SUBSCRIBED"?"Connected — chatting with other Explorers":status==="CHANNEL_ERROR"?"Chat connection error":"Connecting to chat…";});
+  }).subscribe(status=>{chatStatus.textContent=status==="SUBSCRIBED"?"Connected — chatting with other Explorers":(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED")?"Chat offline — multiplayer connection unavailable":"Connecting to chat…";});
+  setTimeout(()=>{if(chatStatus.textContent==="Connecting to chat…")chatStatus.textContent="Chat offline — connection timed out";},8000);
   async function sendChat(){
     const message=chatInput.value.trim();if(!message||message.length>160)return;
     chatInput.value="";addChatMessage(chatName,message);
