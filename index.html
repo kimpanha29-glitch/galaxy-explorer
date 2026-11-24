@@ -15,6 +15,7 @@ main{position:relative;flex:1;min-height:0}canvas{width:100%;height:100%;display
 button{background:linear-gradient(135deg,#263c86,#602b91);border:1px solid #8299ff;color:white;border-radius:10px;padding:9px 14px;font-weight:800;cursor:pointer;box-shadow:0 0 12px #392b88aa}button:hover{filter:brightness(1.25)}button:disabled{opacity:.45;cursor:not-allowed}
 .panel{position:absolute;top:12px;right:12px;width:min(290px,44vw);max-height:70%;overflow:auto;background:#080e24eF;border:1px solid #6178ce;border-radius:14px;padding:12px;display:none;box-shadow:0 0 25px #1b2b78}.panel h3{margin:0 0 8px;color:#9cecff}.item{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid #29345e;padding:8px 0;font-size:13px}.item button{padding:6px 9px;white-space:nowrap}
 #start{position:absolute;inset:0;display:grid;place-items:center;background:#02061799}.startbox{text-align:center;background:#0b1230eF;border:1px solid #738cff;border-radius:18px;padding:24px;max-width:390px;margin:15px;box-shadow:0 0 35px #5543b9}.startbox h1{font-size:30px;margin:0;color:#9cecff}.startbox p{color:#c6d4ff}
+#chatPanel{position:absolute;left:12px;top:12px;width:min(320px,75vw);height:min(390px,65%);background:#080e24f2;border:1px solid #75a8ff;border-radius:14px;padding:10px;display:none;flex-direction:column;gap:8px;box-shadow:0 0 25px #1b2b78;z-index:5}#chatMessages{flex:1;min-height:0;overflow:auto;background:#050a1b;border-radius:8px;padding:8px;font-size:13px;overflow-wrap:anywhere}#chatMessages .msg{padding:5px 0;border-bottom:1px solid #202b50}#chatStatus{font-size:11px;color:#9cecff}#chatInputRow{display:flex;gap:6px}#chatInput{min-width:0;flex:1;background:#111a38;color:white;border:1px solid #5369aa;border-radius:8px;padding:8px}#chatInputRow button{padding:8px 10px}
 @media(max-width:600px){.stat{font-size:11px;padding:5px 7px}.panel{width:min(260px,75vw);max-height:62%}.controls button{padding:8px 10px}}
 </style></head>
 <body><div id="app">
@@ -22,9 +23,10 @@ button{background:linear-gradient(135deg,#263c86,#602b91);border:1px solid #8299
 <div class="stat">Credits: <b id="credits">0</b></div><div class="stat">Hull: <b id="hull">100</b>%</div><div class="stat">Shield: <b id="shield">100</b>%</div><div class="stat">Score: <b id="score">0</b></div><div class="stat">Shards: <b id="shards">0</b></div><div class="stat">Live Players: <b id="livePlayers">Connecting…</b></div></div></header>
 <div id="notice">GALAXY EXPLORER — PREPARE FOR LAUNCH</div>
 <main><canvas id="game"></canvas>
-<div class="controls"><button id="launch">🚀 Launch</button><button id="pause">⏸ Pause</button><button id="shopBtn">🛒 Upgrade Shop</button><button id="eventBtn">💎 Shard Shop</button></div>
+<div class="controls"><button id="launch">🚀 Launch</button><button id="pause">⏸ Pause</button><button id="shopBtn">🛒 Upgrade Shop</button><button id="eventBtn">💎 Shard Shop</button><button id="chatBtn">💬 Chat</button></div>
 <div class="panel" id="shop"><h3>🚀 UPGRADE SHOP</h3><div id="shopItems"></div></div>
 <div class="panel" id="eventShop"><h3>💎 EVENT SHARD SHOP</h3><div id="eventItems"></div></div>
+<div id="chatPanel"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#9cecff">💬 GALAXY CHAT</b><button id="chatClose" style="padding:4px 9px">✕</button></div><div id="chatStatus">Connecting to chat…</div><div id="chatMessages"><div class="msg">Welcome, Explorer! Be kind and do not share personal information.</div></div><div id="chatInputRow"><input id="chatInput" maxlength="160" placeholder="Type a message…" autocomplete="off"><button id="chatSend">Send</button></div></div>
 <div id="start"><div class="startbox"><h1>GALAXY EXPLORER</h1><p>Explore the stars, collect credits, defeat cosmic bosses and discover the hidden ??? rarity!</p><p><b>WASD / Arrow keys</b> to fly · <b>Space</b> to fire</p><button id="begin">🚀 BEGIN EXPLORATION</button></div></div>
 </main></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -43,6 +45,32 @@ try {
     if(status==="SUBSCRIBED") await liveChannel.track({online_at:new Date().toISOString()});
     else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT") liveCountEl.textContent="Offline";
   });
+  const chatPanel=document.getElementById("chatPanel");
+  const chatMessages=document.getElementById("chatMessages");
+  const chatInput=document.getElementById("chatInput");
+  const chatStatus=document.getElementById("chatStatus");
+  const chatName="Explorer-"+Math.floor(1000+Math.random()*9000);
+  const chatChannel=supabaseClient.channel("galaxy-explorer-chat",{config:{broadcast:{self:false}}});
+  function addChatMessage(name,message){
+    const line=document.createElement("div");line.className="msg";
+    const who=document.createElement("b");who.textContent=name+": ";
+    const body=document.createElement("span");body.textContent=message;
+    line.append(who,body);chatMessages.appendChild(line);chatMessages.scrollTop=chatMessages.scrollHeight;
+    while(chatMessages.children.length>80)chatMessages.removeChild(chatMessages.firstChild);
+  }
+  chatChannel.on("broadcast",{event:"chat-message"},({payload})=>{
+    if(payload&&typeof payload.name==="string"&&typeof payload.message==="string")addChatMessage(payload.name.slice(0,24),payload.message.slice(0,160));
+  }).subscribe(status=>{chatStatus.textContent=status==="SUBSCRIBED"?"Connected — chatting with other Explorers":status==="CHANNEL_ERROR"?"Chat connection error":"Connecting to chat…";});
+  async function sendChat(){
+    const message=chatInput.value.trim();if(!message||message.length>160)return;
+    chatInput.value="";addChatMessage(chatName,message);
+    const result=await chatChannel.send({type:"broadcast",event:"chat-message",payload:{name:chatName,message}});
+    if(result!=="ok")chatStatus.textContent="Message may not have sent — check connection";
+  }
+  document.getElementById("chatSend").onclick=sendChat;
+  chatInput.addEventListener("keydown",e=>{if(e.key==="Enter")sendChat()});
+  document.getElementById("chatBtn").onclick=()=>{chatPanel.style.display=chatPanel.style.display==="flex"?"none":"flex";document.getElementById("shop").style.display="none";document.getElementById("eventShop").style.display="none";};
+  document.getElementById("chatClose").onclick=()=>chatPanel.style.display="none";
   window.addEventListener("beforeunload",()=>{supabaseClient.removeChannel(liveChannel)});
 } catch(error) { liveCountEl.textContent="Unavailable"; }
 
