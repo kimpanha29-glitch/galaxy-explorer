@@ -19,7 +19,7 @@ button{background:linear-gradient(135deg,#263c86,#602b91);border:1px solid #8299
 </style></head>
 <body><div id="app">
 <header><div class="logo">✦ GALAXY <span>EXPLORER</span> ✦</div><div class="stats">
-<div class="stat">Credits: <b id="credits">0</b></div><div class="stat">Hull: <b id="hull">100</b>%</div><div class="stat">Shield: <b id="shield">100</b>%</div><div class="stat">Score: <b id="score">0</b></div><div class="stat">Shards: <b id="shards">0</b></div></div></header>
+<div class="stat">Credits: <b id="credits">0</b></div><div class="stat">Hull: <b id="hull">100</b>%</div><div class="stat">Shield: <b id="shield">100</b>%</div><div class="stat">Score: <b id="score">0</b></div><div class="stat">Shards: <b id="shards">0</b></div><div class="stat">Live Players: <b id="livePlayers">Connecting…</b></div></div></header>
 <div id="notice">GALAXY EXPLORER — PREPARE FOR LAUNCH</div>
 <main><canvas id="game"></canvas>
 <div class="controls"><button id="launch">🚀 Launch</button><button id="pause">⏸ Pause</button><button id="shopBtn">🛒 Upgrade Shop</button><button id="eventBtn">💎 Shard Shop</button></div>
@@ -27,8 +27,25 @@ button{background:linear-gradient(135deg,#263c86,#602b91);border:1px solid #8299
 <div class="panel" id="eventShop"><h3>💎 EVENT SHARD SHOP</h3><div id="eventItems"></div></div>
 <div id="start"><div class="startbox"><h1>GALAXY EXPLORER</h1><p>Explore the stars, collect credits, defeat cosmic bosses and discover the hidden ??? rarity!</p><p><b>WASD / Arrow keys</b> to fly · <b>Space</b> to fire</p><button id="begin">🚀 BEGIN EXPLORATION</button></div></div>
 </main></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (()=>{
+const liveCountEl=document.getElementById("livePlayers");
+try {
+  const supabaseClient=window.supabase.createClient("https://rwabjvpsbtlyrchiwhjt.supabase.co","sb_publishable_mdXgbWmU-LVuTQaXd6nn0w_Mw4G6Uwa");
+  const liveChannel=supabaseClient.channel("galaxy-explorer-live",{config:{presence:{key:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random())}}});
+  liveChannel.on("presence",{event:"sync"},()=>{
+    const presence=supabaseClient.channel("galaxy-explorer-live");
+    const state=liveChannel.presenceState();
+    const count=Object.values(state).reduce((total,entries)=>total+entries.length,0);
+    liveCountEl.textContent=String(count);
+  }).subscribe(async status=>{
+    if(status==="SUBSCRIBED") await liveChannel.track({online_at:new Date().toISOString()});
+    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT") liveCountEl.textContent="Offline";
+  });
+  window.addEventListener("beforeunload",()=>{supabaseClient.removeChannel(liveChannel)});
+} catch(error) { liveCountEl.textContent="Unavailable"; }
+
 const c=document.getElementById('game'),ctx=c.getContext('2d');let w,h,playing=false,paused=false,credits=0,score=0,shards=0,hull=100,shield=100,damage=1,fireRate=260,lastShot=0,ship={x:0,y:0,speed:4},keys={},bullets=[],targets=[],particles=[],lastSpawn=0,lastEvent=Date.now(),eventBoss=null,level=0;
 const $=id=>document.getElementById(id);function resize(){const r=c.getBoundingClientRect();w=c.width=r.width*devicePixelRatio;h=c.height=r.height*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);w=r.width;h=r.height;if(!ship.x){ship.x=w/2;ship.y=h*.75}}window.addEventListener('resize',resize);resize();
 const kinds=[['Asteroid','🪨',18,5,'Common'],['Comet','☄️',25,8,'Uncommon'],['Jupiter','🪐',85,45,'Rare'],['Kepler-22b','🌍',110,65,'Epic'],['Betelgeuse','🔴',160,100,'Epic'],['Helix Nebula','🌌',210,150,'Legendary'],['Andromeda Galaxy','🌠',300,240,'Mythic'],['Pulsar','💫',250,190,'Divine'],['Quasar','✨',390,330,'Prismatic'],['Black Hole','🕳️',650,600,'Transcendent']];
