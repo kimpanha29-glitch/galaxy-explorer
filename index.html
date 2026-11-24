@@ -122,11 +122,12 @@ const realImageNames=new Set([
 function loadSpaceImage(name){
  if(!realImageNames.has(name)||spaceImages[name]||imageLoading[name])return;
  imageLoading[name]=true;
- if(name==='Betelgeuse'){const img=new Image();img.onload=()=>{spaceImages[name]=img};img.src='https://assets.science.nasa.gov/dynamicimage/assets/science/missions/hubble/releases/1996/12/STScI-01EVTASFNAT35WSB0DW9XR49ZX.jpg?crop=faces%2Cfocalpoint&fit=clip&h=2025&w=2761';imageLoading[name]=false;return;}\n const query=name==='Quasar'?'quasar NASA Hubble':name+' NASA space telescope';
+ if(name==='Betelgeuse'){const img=new Image();img.onload=()=>{spaceImages[name]=img};img.src='https://assets.science.nasa.gov/dynamicimage/assets/science/missions/hubble/releases/1996/12/STScI-01EVTASFNAT35WSB0DW9XR49ZX.jpg?crop=faces%2Cfocalpoint&fit=clip&h=2025&w=2761';imageLoading[name]=false;return;}
+ const query=name==='Quasar'?'quasar NASA Hubble':name+' NASA space telescope';
  fetch('https://images-api.nasa.gov/search?q='+encodeURIComponent(query)+'&media_type=image&page_size=40')
  .then(r=>r.ok?r.json():null).then(data=>{
   const items=data&&data.collection&&data.collection.items||[];
-  const wanted=name.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\\s+/g,' ').trim();
+  const wanted=name.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
   const tokens=wanted.split(' ').filter(x=>x.length>2);
   const ranked=items.map(item=>{
    const meta=item.data&&item.data[0]||{};
