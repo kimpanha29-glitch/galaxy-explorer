@@ -27,7 +27,7 @@ button{background:linear-gradient(135deg,#263c86,#602b91);border:1px solid #8299
 <div class="panel" id="shop"><h3>🚀 UPGRADE SHOP</h3><div id="shopItems"></div></div>
 <div class="panel" id="eventShop"><h3>💎 EVENT SHARD SHOP</h3><div id="eventItems"></div></div>
 <div id="chatPanel"><div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#9cecff">💬 GALAXY CHAT</b><button id="chatClose" style="padding:4px 9px">✕</button></div><div id="chatStatus">Connecting to chat…</div><div id="chatMessages"><div class="msg">Welcome, Explorer! Be kind and do not share personal information.</div></div><div id="chatInputRow"><input id="chatInput" maxlength="160" placeholder="Type a message…" autocomplete="off"><button id="chatSend">Send</button></div></div>
-<div id="start"><div class="startbox"><h1>GALAXY EXPLORER</h1><p>Explore the stars, collect credits, defeat cosmic bosses and discover the hidden ??? rarity!</p><p><b>WASD / Arrow keys</b> to fly · <b>Space</b> to fire</p><button id="begin">🚀 BEGIN EXPLORATION</button></div></div>
+<div id="start"><div class="startbox"><h1>GALAXY EXPLORER</h1><p>Explore the stars, collect credits, defeat cosmic bosses and discover the hidden ??? rarity!</p><p><b>WASD / Arrow keys</b> to fly · <b>Space</b> to fire</p><button id="begin" onclick="window.dispatchEvent(new Event('galaxy-begin'))">🚀 BEGIN EXPLORATION</button></div></div>
 </main></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="blackhole-art.js"></script>
@@ -89,7 +89,7 @@ try {
 } catch(error) { liveCountEl.textContent="Unavailable"; }
 
 const c=document.getElementById('game'),ctx=c.getContext('2d');let w,h,playing=false,paused=false,credits=0,score=0,shards=0,hull=100,shield=100,damage=10,fireRate=260,lastShot=0,ship={x:0,y:0,speed:4},keys={},bullets=[],targets=[],particles=[],lastSpawn=0,lastEvent=Date.now(),eventBoss=null,level=0;
-const $=id=>document.getElementById(id);function resize(){const r=c.getBoundingClientRect();w=c.width=r.width*devicePixelRatio;h=c.height=r.height*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);w=r.width;h=r.height;if(!ship.x){ship.x=w/2;ship.y=h*.75}}window.addEventListener('resize',resize);resize();
+const $=id=>document.getElementById(id);function resize(){const r=c.getBoundingClientRect();w=c.width=r.width*devicePixelRatio;h=c.height=r.height*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);w=r.width;h=r.height;if(!ship.x){ship.x=w/2;ship.y=h*.75}}window.addEventListener('resize',resize);resize();window.addEventListener('galaxy-begin',()=>{$('start').style.display='none';playing=true;paused=false;ship.x=w/2;ship.y=h*.75;lastEvent=Date.now();requestAnimationFrame(draw)});
 const spaceImages={};
 const imageLoading={};
 // YouTube video thumbnail crops for exoplanets shown in ESA/Hubble's
