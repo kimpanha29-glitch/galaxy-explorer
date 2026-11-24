@@ -34,18 +34,30 @@ button{background:linear-gradient(135deg,#263c86,#602b91);border:1px solid #8299
 <script>
 (()=>{
 const liveCountEl=document.getElementById("livePlayers");
+liveCountEl.textContent="Starting…";
+const liveTimeout=setTimeout(()=>{if(liveCountEl.textContent==="Starting…"||liveCountEl.textContent==="Connecting…")liveCountEl.textContent="Offline";},7000);
 try {
+  if(!window.supabase||!window.supabase.createClient) throw new Error("Supabase library did not load");
   const supabaseClient=window.supabase.createClient("https://rwabjvpsbtlyrchiwhjt.supabase.co","sb_publishable_mdXgbWmU-LVuTQaXd6nn0w_Mw4G6Uwa");
-  const liveChannel=supabaseClient.channel("galaxy-explorer-live",{config:{presence:{key:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random())}}});
+  const liveChannel=supabaseClient.channel("galaxy-explorer-live",{config:{presence:{key:(window.crypto&&crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random())}}});
   liveChannel.on("presence",{event:"sync"},()=>{
     const state=liveChannel.presenceState();
     const count=Object.values(state).reduce((total,entries)=>total+entries.length,0);
     liveCountEl.textContent=String(count);
-  }).subscribe(async status=>{
-    if(status==="SUBSCRIBED") await liveChannel.track({online_at:new Date().toISOString()});
-    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED") liveCountEl.textContent="Offline";
+    clearTimeout(liveTimeout);
+  }).subscribe(async (status,error)=>{
+    if(status==="SUBSCRIBED"){
+      liveCountEl.textContent="0";
+      try { await liveChannel.track({online_at:new Date().toISOString()}); }
+      catch(trackError){ liveCountEl.textContent="Offline"; }
+    } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
+      liveCountEl.textContent="Offline";
+      clearTimeout(liveTimeout);
+      console.warn("Galaxy Explorer presence connection:",status,error||"");
+    } else if(status==="SUBSCRIBING"){
+      liveCountEl.textContent="Connecting…";
+    }
   });
-  setTimeout(()=>{if(liveCountEl.textContent==="Connecting…")liveCountEl.textContent="Offline";},8000);
   const chatPanel=document.getElementById("chatPanel");
   const chatMessages=document.getElementById("chatMessages");
   const chatInput=document.getElementById("chatInput");
