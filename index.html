@@ -80,16 +80,30 @@ const $=id=>document.getElementById(id);function resize(){const r=c.getBoundingC
 const spaceImages={};
 const imageLoading={};
 const realImageNames=new Set([
-'Jupiter','Saturn','Uranus','Neptune','Betelgeuse','Helix Nebula','Orion Nebula','Carina Nebula','Eagle Nebula','Pillars of Creation','Lagoon Nebula','Trifid Nebula','Ring Nebula','Dumbbell Nebula','Horsehead Nebula','Rosette Nebula','Tarantula Nebula','Crab Nebula','Andromeda Galaxy'
+'Jupiter','Saturn','Uranus','Neptune','Betelgeuse',
+'Helix Nebula','Orion Nebula','Carina Nebula','Eagle Nebula','Pillars of Creation','Lagoon Nebula','Trifid Nebula','Ring Nebula','Dumbbell Nebula','Horsehead Nebula','Rosette Nebula','Tarantula Nebula','Crab Nebula','Andromeda Galaxy',
+'Crab Pulsar','Vela Pulsar','Geminga Pulsar','PSR B0329+54','Black Widow Pulsar','Millisecond Pulsar','Magnetar','Quasar'
 ]);
 function loadSpaceImage(name){
  if(!realImageNames.has(name)||spaceImages[name]||imageLoading[name])return;
  imageLoading[name]=true;
- fetch('https://images-api.nasa.gov/search?q='+encodeURIComponent(name)+'&media_type=image')
+ const query=name==='Quasar'?'quasar NASA Hubble':name+' NASA space telescope';
+ fetch('https://images-api.nasa.gov/search?q='+encodeURIComponent(query)+'&media_type=image&page_size=40')
  .then(r=>r.ok?r.json():null).then(data=>{
-  const item=data&&data.collection&&data.collection.items&&data.collection.items.find(x=>x.links&&x.links[0]&&x.links[0].href);
-  if(!item)return;
-  const img=new Image();img.onload=()=>{spaceImages[name]=img};img.src=item.links[0].href;
+  const items=data&&data.collection&&data.collection.items||[];
+  const wanted=name.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\\s+/g,' ').trim();
+  const tokens=wanted.split(' ').filter(x=>x.length>2);
+  const ranked=items.map(item=>{
+   const meta=item.data&&item.data[0]||{};
+   const title=(meta.title||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ');
+   const desc=(meta.description||'').toLowerCase();
+   let score=title.includes(wanted)?100:0;
+   for(const token of tokens){if(title.includes(token))score+=8;else if(desc.includes(token))score+=1}
+   return {item,score};
+  }).sort((a,b)=>b.score-a.score);
+  const best=ranked.find(x=>x.score>=(tokens.length>1?tokens.length*5:8)&&x.item.links&&x.item.links[0]&&x.item.links[0].href);
+  if(!best)return;
+  const img=new Image();img.onload=()=>{spaceImages[name]=img};img.src=best.item.links[0].href;
  }).catch(()=>{}).finally(()=>{imageLoading[name]=false});
 }
 const blackHoleImages={};
