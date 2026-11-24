@@ -80,7 +80,7 @@ const $=id=>document.getElementById(id);function resize(){const r=c.getBoundingC
 const spaceImages={};
 const imageLoading={};
 const realImageNames=new Set([
-'Jupiter','Saturn','Uranus','Neptune','Helix Nebula','Orion Nebula','Carina Nebula','Eagle Nebula','Pillars of Creation','Lagoon Nebula','Trifid Nebula','Ring Nebula','Dumbbell Nebula','Horsehead Nebula','Rosette Nebula','Tarantula Nebula','Crab Nebula','Andromeda Galaxy'
+'Jupiter','Saturn','Uranus','Neptune','Betelgeuse','Helix Nebula','Orion Nebula','Carina Nebula','Eagle Nebula','Pillars of Creation','Lagoon Nebula','Trifid Nebula','Ring Nebula','Dumbbell Nebula','Horsehead Nebula','Rosette Nebula','Tarantula Nebula','Crab Nebula','Andromeda Galaxy'
 ]);
 function loadSpaceImage(name){
  if(!realImageNames.has(name)||spaceImages[name]||imageLoading[name])return;
@@ -103,7 +103,7 @@ function shop(){ $('shopItems').innerHTML=upgrades.map((u,i)=>'<div class="item"
 shop();$('shopItems').onclick=e=>{let b=e.target.closest('[data-up]');if(!b)return;let u=upgrades[+b.dataset.up];if(credits>=u[1]){credits-=u[1];u[2]();hud();announce(u[0]+' UPGRADED!')}};$('eventItems').onclick=e=>{let b=e.target.closest('[data-re]');if(!b)return;let u=rewards[+b.dataset.re];if(shards>=u[1]){shards-=u[1];damage+=+b.dataset.re+2;if(b.dataset.re==1)shield=100;if(b.dataset.re==4)hull=100;hud();announce(u[0]+' UNLOCKED!') }};
 function hud(){ $('credits').textContent=credits;$('hull').textContent=Math.max(0,Math.round(hull));$('shield').textContent=Math.max(0,Math.round(shield));$('score').textContent=score;$('shards').textContent=shards}
 function announce(s){$('notice').textContent=s}
-function spawn(){let k=kinds[Math.floor(Math.random()*kinds.length)];loadSpaceImage(k[0]);const isBlackHole=/Black Hole|Sagittarius A|M87\*|Cygnus X-1|TON 618|Phoenix A|Holmberg 15A/i.test(k[0]);targets.push({artIndex:isBlackHole?Math.floor(Math.random()*5):0,x:25+Math.random()*(w-50),y:-35,size:18+Math.random()*20,name:k[0],emoji:k[1],hp:k[2],max:k[2],value:k[3],rarity:k[4],speed:.08+Math.random()*.12})}
+function spawn(){let k=kinds[Math.floor(Math.random()*kinds.length)];loadSpaceImage(k[0]);const isBlackHole=/Black Hole|Sagittarius A|M87\*|Cygnus X-1|TON 618|Phoenix A|Holmberg 15A/i.test(k[0]);targets.push({artIndex:isBlackHole?Math.floor(Math.random()*5):undefined,x:25+Math.random()*(w-50),y:-35,size:18+Math.random()*20,name:k[0],emoji:k[1],hp:k[2],max:k[2],value:k[3],rarity:k[4],speed:.08+Math.random()*.12})}
 function shoot(){let now=Date.now();if(now-lastShot<fireRate)return;lastShot=now;bullets.push({x:ship.x,y:ship.y-20,v:8,damage});if(damage>1)bullets.push({x:ship.x-12,y:ship.y-12,v:8,damage});if(damage>3)bullets.push({x:ship.x+12,y:ship.y-12,v:8,damage})}
 window.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,[contenteditable=true]'))return;keys[e.key.toLowerCase()]=true;if(e.code==='Space'){e.preventDefault();if(playing&&!paused)shoot()}});window.addEventListener('keyup',e=>{if(e.target.matches('input,textarea,[contenteditable=true]'))return;keys[e.key.toLowerCase()]=false});
 function event(){const names=['🌟 SUPERNOVA CHAOS','👾 ALIEN FLEET INVASION','🌀 WORMHOLE EXPEDITION','☄️ METEOR ARMAGEDDON','🌌 GALAXY COLLISION','🕳️ BLACK HOLE APOCALYPSE'];let name=names[Math.floor(Math.random()*names.length)];announce('⚠ EVENT: '+name+' ⚠');shards+=5;eventBoss={x:w/2,y:90,hp:450,max:450};setTimeout(()=>{if(eventBoss){shards+=10;announce('EVENT CLEARED! +15 EVENT SHARDS');eventBoss=null;hud()}},25000);hud()}
