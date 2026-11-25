@@ -222,12 +222,35 @@ function fallbackCategory(name){
  if(/star|betelgeuse|rigel/i.test(name))return 'star';
  return 'other';
 }
+function makeCleanSpaceArt(name){
+ const category=fallbackCategory(name);
+ const c=document.createElement('canvas');c.width=512;c.height=512;
+ const g=c.getContext('2d');
+ const bg=g.createRadialGradient(256,230,20,256,256,360);
+ bg.addColorStop(0,'#263c70');bg.addColorStop(.55,'#101a3b');bg.addColorStop(1,'#030713');
+ g.fillStyle=bg;g.fillRect(0,0,512,512);
+ // Starfield only: no people, captions, logos, or lettering.
+ for(let i=0;i<115;i++){const x=(i*137.5)%512,y=(i*83.7)%512;g.fillStyle='rgba(230,242,255,'+(0.25+(i%5)*.13)+')';g.beginPath();g.arc(x,y,(i%4===0)?2:1,0,Math.PI*2);g.fill()}
+ const planet=(base,light)=>{
+  const p=g.createRadialGradient(190,165,12,256,256,185);p.addColorStop(0,light);p.addColorStop(.45,base);p.addColorStop(1,'#050817');
+  g.fillStyle=p;g.beginPath();g.arc(256,256,155,0,Math.PI*2);g.fill();
+  g.save();g.beginPath();g.arc(256,256,155,0,Math.PI*2);g.clip();
+  for(let i=0;i<15;i++){g.strokeStyle='rgba(255,255,255,.09)';g.lineWidth=5+i%3*2;g.beginPath();g.ellipse(256,210+i*7,155,18+i*2,0,0,Math.PI*2);g.stroke()}
+  g.restore();
+ };
+ if(category==='planet'){planet('#3979a8','#b9e5ff');}
+ else if(category==='star'){const p=g.createRadialGradient(256,256,20,256,256,180);p.addColorStop(0,'#fff6c9');p.addColorStop(.25,'#ffbd58');p.addColorStop(.65,'#f45d35');p.addColorStop(1,'rgba(180,35,35,0)');g.fillStyle=p;g.beginPath();g.arc(256,256,180,0,Math.PI*2);g.fill()}
+ else if(category==='blackhole'){g.save();g.translate(256,256);g.rotate(-.28);for(let i=0;i<5;i++){g.strokeStyle=['#fff0a8','#ffb45e','#ed704d','#a85bd5','#547de8'][i];g.globalAlpha=.82-i*.1;g.lineWidth=22-i*2;g.beginPath();g.ellipse(0,0,205-i*17,78-i*8,0,0,Math.PI*2);g.stroke()}g.globalAlpha=1;g.fillStyle='#02030a';g.beginPath();g.arc(0,0,72,0,Math.PI*2);g.fill();g.restore()}
+ else if(category==='galaxy'){g.save();g.translate(256,256);for(let arm=0;arm<3;arm++){g.rotate(Math.PI*2/3);for(let i=0;i<95;i++){const a=i*.16,r=10+i*1.45,x=Math.cos(a)*r,y=Math.sin(a)*r*.43;g.fillStyle='rgba('+(140+i%90)+','+(150+i%80)+',255,'+(.2+i/150)+')';g.beginPath();g.arc(x,y,2+i%4,0,Math.PI*2);g.fill()}}g.restore();g.fillStyle='#fff4d6';g.beginPath();g.arc(256,256,17,0,Math.PI*2);g.fill()}
+ else if(category==='nebula'){for(let i=0;i<18;i++){const x=100+(i*79)%320,y=90+(i*113)%330;const p=g.createRadialGradient(x,y,4,x,y,100);p.addColorStop(0,['rgba(255,120,190,.7)','rgba(100,170,255,.65)','rgba(170,100,255,.6)'][i%3]);p.addColorStop(1,'rgba(20,20,80,0)');g.fillStyle=p;g.beginPath();g.arc(x,y,100,0,Math.PI*2);g.fill()}}
+ else if(category==='pulsar'){g.save();g.translate(256,256);g.fillStyle='#eaf8ff';g.beginPath();g.arc(0,0,28,0,Math.PI*2);g.fill();for(let a=0;a<2;a++){g.save();g.rotate(a*Math.PI);const beam=g.createLinearGradient(0,-20,0,-245);beam.addColorStop(0,'rgba(130,220,255,.85)');beam.addColorStop(1,'rgba(80,130,255,0)');g.fillStyle=beam;g.beginPath();g.moveTo(-20,-15);g.lineTo(20,-15);g.lineTo(5,-250);g.lineTo(-5,-250);g.closePath();g.fill();g.restore()}g.restore()}
+ else {planet('#657a9c','#d9e8f5')}
+ return c;
+}
 function useYoutubeFallback(name){
  if(spaceImages[name])return;
- const img=new Image();
- img.onload=()=>{spaceImages[name]=img};
- img.onerror=()=>{spaceImages[name]=window.blackHoleArt&&window.blackHoleArt.ready?window.blackHoleArt.image:null};
- img.src=youtubeFallbacks[fallbackCategory(name)]||youtubeFallbacks.other;
+ // Clean original illustrations contain only the space object and stars.
+ spaceImages[name]=makeCleanSpaceArt(name);
 }
 function loadSpaceImage(name){
  if(spaceImages[name]||imageLoading[name])return;
