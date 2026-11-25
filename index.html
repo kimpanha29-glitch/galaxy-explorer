@@ -202,8 +202,8 @@ const c=document.getElementById('game'),ctx=c.getContext('2d');let w,h,playing=f
 const $=id=>document.getElementById(id);function resize(){const r=c.getBoundingClientRect();w=c.width=r.width*devicePixelRatio;h=c.height=r.height*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);w=r.width;h=r.height;if(!ship.x){ship.x=w/2;ship.y=h*.75}}window.addEventListener('resize',resize);resize();window.addEventListener('galaxy-begin',()=>{$('start').style.display='none';playing=true;paused=false;ship.x=w/2;ship.y=h*.75;lastEvent=Date.now();requestAnimationFrame(draw)});
 const spaceImages={};
 const imageLoading={};
-// When an exact telescope image is unavailable, use a clearly illustrative
-// YouTube video thumbnail rather than showing an unrelated object or emoji.
+// Prefer confirmed object-specific astronomy imagery. Use clean original
+// space artwork only when no suitable image can be confirmed.
 const youtubeFallbacks={
  planet:'https://i.ytimg.com/vi/Y7c8oRXV4Wg/hqdefault.jpg',
  nebula:'https://i.ytimg.com/vi/RqmEDESkjew/hqdefault.jpg',
@@ -249,7 +249,7 @@ function makeCleanSpaceArt(name){
 }
 function useYoutubeFallback(name){
  if(spaceImages[name])return;
- // Clean original illustrations contain only the space object and stars.
+ // Artistic fallback contains only space objects and stars, with no people or lettering.
  spaceImages[name]=makeCleanSpaceArt(name);
 }
 function loadSpaceImage(name){
