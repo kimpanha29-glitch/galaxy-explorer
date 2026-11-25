@@ -202,53 +202,56 @@ const c=document.getElementById('game'),ctx=c.getContext('2d');let w,h,playing=f
 const $=id=>document.getElementById(id);function resize(){const r=c.getBoundingClientRect();w=c.width=r.width*devicePixelRatio;h=c.height=r.height*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);w=r.width;h=r.height;if(!ship.x){ship.x=w/2;ship.y=h*.75}}window.addEventListener('resize',resize);resize();window.addEventListener('galaxy-begin',()=>{$('start').style.display='none';playing=true;paused=false;ship.x=w/2;ship.y=h*.75;lastEvent=Date.now();requestAnimationFrame(draw)});
 const spaceImages={};
 const imageLoading={};
-// YouTube video thumbnail crops for exoplanets shown in ESA/Hubble's
-// "Clear to cloudy hot Jupiters" video. These are artist impressions, not photos.
-const youtubePlanetCrops={
- 'WASP-12b':[0,0],
- 'HD 189733 b':[4,0],
- 'WASP-17b':[1,1]
+// When an exact telescope image is unavailable, use a clearly illustrative
+// YouTube video thumbnail rather than showing an unrelated object or emoji.
+const youtubeFallbacks={
+ planet:'https://i.ytimg.com/vi/Y7c8oRXV4Wg/hqdefault.jpg',
+ nebula:'https://i.ytimg.com/vi/RqmEDESkjew/hqdefault.jpg',
+ galaxy:'https://i.ytimg.com/vi/8Ptl1DT5AJY/hqdefault.jpg',
+ blackhole:'https://i.ytimg.com/vi/RqmEDESkjew/hqdefault.jpg',
+ star:'https://i.ytimg.com/vi/vOqI4HzxG2k/hqdefault.jpg',
+ pulsar:'https://i.ytimg.com/vi/vOqI4HzxG2k/hqdefault.jpg',
+ other:'https://i.ytimg.com/vi/4xktA39r4yU/hqdefault.jpg'
 };
-function loadYoutubePlanetImage(name){
- if(spaceImages[name]||imageLoading[name]||!youtubePlanetCrops[name])return;
- imageLoading[name]=true;
- const img=new Image();
- img.onload=()=>{
-  const [col,row]=youtubePlanetCrops[name];
-  const tile=document.createElement('canvas');
-  tile.width=img.width/5;tile.height=img.height/2;
-  const sw=img.width/5,sh=img.height/2;
-  tile.getContext('2d').drawImage(img,col*sw,row*sh,sw,sh,0,0,tile.width,tile.height);
-  spaceImages[name]=tile;imageLoading[name]=false;
- };
- img.onerror=()=>{imageLoading[name]=false};
- img.src='https://i.ytimg.com/vi/Y7c8oRXV4Wg/maxresdefault.jpg';
+function fallbackCategory(name){
+ if(/black hole|sagittarius|m87|cygnus|ton 618|phoenix|holmberg|gaia bh|v404|grs 1915|gro j1655|lmc x-1|m33 x-7|ngc 1600|ngc 4889|s5 0014|oj 287/i.test(name))return 'blackhole';
+ if(/pulsar|magnetar|neutron/i.test(name))return 'pulsar';
+ if(/nebula/i.test(name))return 'nebula';
+ if(/galaxy|andromeda|m81/i.test(name))return 'galaxy';
+ if(/planet|jupiter|saturn|uranus|neptune|wasp|kepler|hat-p|trES|51 pegasi/i.test(name))return 'planet';
+ if(/star|betelgeuse|rigel/i.test(name))return 'star';
+ return 'other';
 }
-const realImageNames=new Set([
-'Jupiter','Saturn','Uranus','Neptune','Betelgeuse',
-'Helix Nebula','Orion Nebula','Carina Nebula','Eagle Nebula','Pillars of Creation','Lagoon Nebula','Trifid Nebula','Ring Nebula','Dumbbell Nebula','Horsehead Nebula','Rosette Nebula','Tarantula Nebula','Crab Nebula','Andromeda Galaxy',
-'Crab Pulsar','Vela Pulsar','Geminga Pulsar','PSR B0329+54','Black Widow Pulsar','Millisecond Pulsar','Magnetar','Quasar'
-]);
+function useYoutubeFallback(name){
+ if(spaceImages[name])return;
+ const img=new Image();
+ img.onload=()=>{spaceImages[name]=img};
+ img.onerror=()=>{spaceImages[name]=window.blackHoleArt&&window.blackHoleArt.ready?window.blackHoleArt.image:null};
+ img.src=youtubeFallbacks[fallbackCategory(name)]||youtubeFallbacks.other;
+}
 function loadSpaceImage(name){
- if(!realImageNames.has(name)||spaceImages[name]||imageLoading[name])return;
+ if(spaceImages[name]||imageLoading[name])return;
  imageLoading[name]=true;
- if(name==='Betelgeuse'){const img=new Image();img.onload=()=>{spaceImages[name]=img};img.src='https://assets.science.nasa.gov/dynamicimage/assets/science/missions/hubble/releases/1996/12/STScI-01EVTASFNAT35WSB0DW9XR49ZX.jpg?crop=faces%2Cfocalpoint&fit=clip&h=2025&w=2761';imageLoading[name]=false;return;}
- const query=name==='Quasar'?'quasar NASA Hubble':name+' NASA space telescope';
- fetch('https://images-api.nasa.gov/search?q='+encodeURIComponent(query)+'&media_type=image&page_size=40')
+ const query=name+' astronomy space telescope image';
+ fetch('https://images-api.nasa.gov/search?q='+encodeURIComponent(query)+'&media_type=image&page_size=60')
  .then(r=>r.ok?r.json():null).then(data=>{
   const items=data&&data.collection&&data.collection.items||[];
-  const wanted=name.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
-  // Only accept archive titles that explicitly name this object.
-  // Loose description matches caused unrelated pictures.
-  const normalize=value=>value.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+  const normalize=value=>value.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\\s+/g,' ').trim();
+  const wanted=normalize(name);
+  // Prefer only a result whose title names the requested object.
   const best=items.find(item=>{
    const meta=item.data&&item.data[0]||{};
    const title=normalize(meta.title||'');
    return (title===wanted||title.startsWith(wanted+' ')||title.includes(' '+wanted+' '))&&item.links&&item.links[0]&&item.links[0].href;
   });
-  if(!best)return;
-  const img=new Image();img.onload=()=>{spaceImages[name]=img};img.src=best.links[0].href;
- }).catch(()=>{}).finally(()=>{imageLoading[name]=false});
+  if(best){
+   const img=new Image();
+   img.onload=()=>{spaceImages[name]=img};
+   img.onerror=()=>useYoutubeFallback(name);
+   img.src=best.links[0].href;
+  }else useYoutubeFallback(name);
+ }).catch(()=>useYoutubeFallback(name))
+ .finally(()=>{imageLoading[name]=false});
 }
 const blackHoleImages={};
 function loadBlackHoleImage(name,url){const img=new Image();img.onload=()=>{blackHoleImages[name]=img};img.src=url}
@@ -261,7 +264,7 @@ function shop(){ $('shopItems').innerHTML=upgrades.map((u,i)=>'<div class="item"
 shop();$('shopItems').onclick=e=>{let b=e.target.closest('[data-up]');if(!b)return;let u=upgrades[+b.dataset.up];if(credits>=u[1]){credits-=u[1];u[2]();hud();announce(u[0]+' UPGRADED!')}};$('eventItems').onclick=e=>{let b=e.target.closest('[data-re]');if(!b)return;let u=rewards[+b.dataset.re];if(shards>=u[1]){shards-=u[1];u[2]();hud();announce(u[0]+' UNLOCKED!') }};
 function hud(){ $('credits').textContent=credits;$('hull').textContent=Math.max(0,Math.round(hull));$('shield').textContent=Math.max(0,Math.round(shield));$('score').textContent=score;$('shards').textContent=shards}
 function announce(s){$('notice').textContent=s}
-function spawn(){const available=kinds.filter(k=>k[0]!=='Universe'&&!targets.some(t=>t.name===k[0]));if(!available.length)return;let k;if(!targets.some(t=>t.name==='Universe')&&Math.random()<0.002)k=kinds.find(item=>item[0]==='Universe');else k=available[Math.floor(Math.random()*available.length)];if(youtubePlanetCrops[k[0]])loadYoutubePlanetImage(k[0]);else loadSpaceImage(k[0]);const isBlackHole=/Black Hole|Sagittarius A|M87\\*|Cygnus X-1|TON 618|Phoenix A|Holmberg 15A|Gaia BH|V404 Cygni|GRS 1915|GRO J1655|LMC X-1|M33 X-7|NGC 1600|NGC 4889|S5 0014|OJ 287/i.test(k[0]);targets.push({artIndex:isBlackHole?(k[0]==='TON 618'?3:k[0]==='Phoenix A*'?4:Math.floor(Math.random()*5)):undefined,x:25+Math.random()*(w-50),y:-35,size:18+Math.random()*20,name:k[0],emoji:k[1],hp:k[2],max:k[2],value:k[3],rarity:k[4],speed:.12})}
+function spawn(){const available=kinds.filter(k=>k[0]!=='Universe'&&!targets.some(t=>t.name===k[0]));if(!available.length)return;let k;if(!targets.some(t=>t.name==='Universe')&&Math.random()<0.002)k=kinds.find(item=>item[0]==='Universe');else k=available[Math.floor(Math.random()*available.length)];loadSpaceImage(k[0]);const isBlackHole=/Black Hole|Sagittarius A|M87\\*|Cygnus X-1|TON 618|Phoenix A|Holmberg 15A|Gaia BH|V404 Cygni|GRS 1915|GRO J1655|LMC X-1|M33 X-7|NGC 1600|NGC 4889|S5 0014|OJ 287/i.test(k[0]);targets.push({artIndex:isBlackHole?(k[0]==='TON 618'?3:k[0]==='Phoenix A*'?4:Math.floor(Math.random()*5)):undefined,x:25+Math.random()*(w-50),y:-35,size:18+Math.random()*20,name:k[0],emoji:k[1],hp:k[2],max:k[2],value:k[3],rarity:k[4],speed:.12})}
 function shoot(){let now=Date.now();if(now-lastShot<fireRate)return;lastShot=now;const bank=(keys.arrowleft||keys.a||keys.keya)?-.12:(keys.arrowright||keys.d||keys.keyd)?.12:0;const fire=(xoff,yoff,speed,extra={})=>{const vx=Math.sin(bank)*speed,vy=-Math.cos(bank)*speed;bullets.push({x:ship.x+xoff,y:ship.y+yoff,vx,vy,v:speed,damage,...extra})};fire(0,-36,8);if(damage>1)fire(-12,-27,8);if(damage>3||weaponLevel>=1)fire(12,-27,8);if(weaponLevel>=2){fire(-24,-20,8);fire(24,-20,8)}if(rocketLevel>0)fire(0,-40,10,{damage:damage+rocketLevel*4,rocket:true})}
 window.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,[contenteditable=true]'))return;const k=e.key.toLowerCase(),code=e.code.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown','a','d','w','s','space'].includes(k)||['keya','keyd','keyw','keys','space'].includes(code))e.preventDefault();keys[k]=true;keys[code]=true;if(e.code==='Space'&&playing&&!paused)shoot()});window.addEventListener('keyup',e=>{if(e.target.matches('input,textarea,[contenteditable=true]'))return;keys[e.key.toLowerCase()]=false;keys[e.code.toLowerCase()]=false});
 function event(){const names=['🌟 SUPERNOVA CHAOS','👾 ALIEN FLEET INVASION','🌀 WORMHOLE EXPEDITION','☄️ METEOR ARMAGEDDON','🌌 GALAXY COLLISION','🕳️ BLACK HOLE APOCALYPSE'];let name=names[Math.floor(Math.random()*names.length)];announce('⚠ EVENT: '+name+' ⚠');shards+=5;eventBoss={x:w/2,y:90,hp:450,max:450};setTimeout(()=>{if(eventBoss){shards+=10;announce('EVENT CLEARED! +15 EVENT SHARDS');eventBoss=null;hud()}},25000);hud()}
