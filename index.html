@@ -128,8 +128,8 @@ window.galaxy3D={
   lastData=data;
   const w=main.clientWidth,h=main.clientHeight;
   camera.position.set(w/2,h/2,1200);camera.lookAt(w/2,h/2,0);
-  camera.left=-w/2;camera.right=w/2;camera.top=-h/2;camera.bottom=h/2;camera.updateProjectionMatrix();
-  ship.position.set(data.ship.x,h-data.ship.y,35);
+  camera.left=-w/2;camera.right=w/2;camera.top=h/2;camera.bottom=-h/2;camera.updateProjectionMatrix();
+  ship.position.set(data.ship.x,h/2-data.ship.y,35);
   ship.userData.bank=data.bank||0;
   shield.visible=data.shield>0;
   for(const obj of targetMeshes.values())world.remove(obj);
@@ -280,7 +280,7 @@ if(Date.now()-lastSpawn>4500 && targets.length<2){spawn();lastSpawn=Date.now()}t
  ctx.textAlign='center';ctx.font='bold 11px system-ui';ctx.fillStyle='#eef6ff';ctx.shadowColor='#000';ctx.shadowBlur=4;ctx.fillText(t.name,t.x,t.y-t.size-9);
  ctx.fillStyle='#222';ctx.fillRect(t.x-t.size,t.y+t.size+4,t.size*2,5);ctx.fillStyle='#6f9';ctx.fillRect(t.x-t.size,t.y+t.size+4,t.size*2*Math.max(0,t.hp/t.max),5);ctx.restore();
 
-if(t.y>h+40){t.y=-40;t.x=Math.random()*w}if(Math.abs(t.x-ship.x)<t.size+12&&Math.abs(t.y-ship.y)<t.size+12){if(shield>0)shield=Math.max(0,shield-Math.max(1,4-armor));else hull-=Math.max(1,3-armor);t.y=ship.y+t.size+24}});targets=targets.filter(t=>t.hp>0);
+if(t.y>h+40){t.y=-40;t.x=Math.random()*w}if(Math.abs(t.x-ship.x)<t.size+12&&Math.abs(t.y-ship.y)<t.size+12){if(shield>0)shield=Math.max(0,shield-Math.max(1,4-armor));else hull-=Math.max(1,3-armor);t.hp=0}});targets=targets.filter(t=>t.hp>0);
 if(eventBoss){eventBoss.x=w/2+Math.sin(Date.now()/400)*w*.25;ctx.font='48px sans-serif';ctx.fillText('👾',eventBoss.x,eventBoss.y);ctx.fillStyle='#333';ctx.fillRect(w/2-90,35,180,9);ctx.fillStyle='#f5a';ctx.fillRect(w/2-90,35,180*eventBoss.hp/eventBoss.max,9);bullets.forEach(b=>{if(Math.abs(b.x-eventBoss.x)<55&&Math.abs(b.y-eventBoss.y)<35){eventBoss.hp-=b.damage;b.y=-999}});if(eventBoss.hp<=0){eventBoss=null;shards+=20;credits+=500;announce('BOSS DEFEATED! +500 CREDITS +20 SHARDS');hud()}}
 if(shieldRegen>0&&Date.now()-lastShieldTick>1000){shield=Math.min(100,shield+shieldRegen);lastShieldTick=Date.now()}if(droneLevel>0&&targets.length&&Date.now()-lastDroneShot>Math.max(350,1300-droneLevel*120)){const target=targets[0];const droneBank=(keys.arrowleft||keys.a)?-.12:(keys.arrowright||keys.d)?.12:0;const dvx=Math.sin(droneBank)*7,dvy=-Math.cos(droneBank)*7;bullets.push({x:ship.x-18,y:ship.y-24,v:7,vx:dvx,vy:dvy,damage:damage+droneLevel*2});bullets.push({x:ship.x+18,y:ship.y-24,v:7,vx:dvx,vy:dvy,damage:damage+droneLevel*2});lastDroneShot=Date.now()}if(Date.now()-lastEvent>240000){event();lastEvent=Date.now()}if(hull<=0){hull=0;playing=false;$('start').style.display='grid';$('start').querySelector('h1').textContent='SHIP DAMAGED!';$('start').querySelector('p').textContent='Your expedition ended. Launch again to continue your adventure.';announce('MISSION ENDED — REPAIR AND RELAUNCH')}hud();requestAnimationFrame(draw)}
 $('begin').onclick=()=>{$('start').style.display='none';playing=true;paused=false;ship.x=w/2;ship.y=h*.75;lastEvent=Date.now();requestAnimationFrame(draw)};$('launch').onclick=()=>{if(!playing){$('begin').click()}else{paused=false;announce('ENGINES ONLINE — GOOD LUCK, EXPLORER!')}};$('pause').onclick=()=>{if(playing){paused=!paused;$('pause').textContent=paused?'▶ Resume':'⏸ Pause';announce(paused?'GAME PAUSED':'RESUMED')}};$('shopBtn').onclick=()=>{$('shop').style.display=$('shop').style.display==='block'?'none':'block';$('eventShop').style.display='none'};$('eventBtn').onclick=()=>{$('eventShop').style.display=$('eventShop').style.display==='block'?'none':'block';$('shop').style.display='none'};
