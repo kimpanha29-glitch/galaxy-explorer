@@ -232,26 +232,10 @@ function useYoutubeFallback(name){
 function loadSpaceImage(name){
  if(spaceImages[name]||imageLoading[name])return;
  imageLoading[name]=true;
- const query=name+' astronomy space telescope image';
- fetch('https://images-api.nasa.gov/search?q='+encodeURIComponent(query)+'&media_type=image&page_size=60')
- .then(r=>r.ok?r.json():null).then(data=>{
-  const items=data&&data.collection&&data.collection.items||[];
-  const normalize=value=>value.toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\\s+/g,' ').trim();
-  const wanted=normalize(name);
-  // Prefer only a result whose title names the requested object.
-  const best=items.find(item=>{
-   const meta=item.data&&item.data[0]||{};
-   const title=normalize(meta.title||'');
-   return (title===wanted||title.startsWith(wanted+' ')||title.includes(' '+wanted+' '))&&item.links&&item.links[0]&&item.links[0].href;
-  });
-  if(best){
-   const img=new Image();
-   img.onload=()=>{spaceImages[name]=img};
-   img.onerror=()=>useYoutubeFallback(name);
-   img.src=best.links[0].href;
-  }else useYoutubeFallback(name);
- }).catch(()=>useYoutubeFallback(name))
- .finally(()=>{imageLoading[name]=false});
+ // Use the artistic YouTube illustrations for every object, as requested.
+ // Keep each object's real name displayed above its illustration.
+ useYoutubeFallback(name);
+ imageLoading[name]=false;
 }
 const blackHoleImages={};
 function loadBlackHoleImage(name,url){const img=new Image();img.onload=()=>{blackHoleImages[name]=img};img.src=url}
