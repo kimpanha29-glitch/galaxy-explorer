@@ -42,8 +42,8 @@ renderer.toneMappingExposure=1.05;
 main.insertBefore(renderer.domElement,main.firstChild);
 const scene=new THREE.Scene();
 scene.background=null;
-const camera=new THREE.PerspectiveCamera(48,main.clientWidth/main.clientHeight,.1,2500);
-camera.position.set(0,0,780);
+const camera=new THREE.OrthographicCamera(0,main.clientWidth,0,main.clientHeight,.1,2500);
+camera.position.set(0,0,1200);
 const ambient=new THREE.HemisphereLight(0xc8dcff,0x182033,2.0);scene.add(ambient);
 const keyLight=new THREE.DirectionalLight(0xffffff,2.3);keyLight.position.set(-120,-180,260);scene.add(keyLight);
 const rimLight=new THREE.PointLight(0x5d9cff,95,900);rimLight.position.set(180,100,180);scene.add(rimLight);
@@ -101,7 +101,7 @@ function makeTarget(t){
  return group;
 }
 let lastData=null;
-function resize3d(){const w=main.clientWidth,h=main.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+function resize3d(){const w=main.clientWidth,h=main.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.left=0;camera.right=w;camera.top=0;camera.bottom=h;camera.updateProjectionMatrix()}
 window.addEventListener('resize',resize3d);
 function animate(){
  requestAnimationFrame(animate);
@@ -116,8 +116,8 @@ window.galaxy3D={
  update(data){
   lastData=data;
   const w=main.clientWidth,h=main.clientHeight;
-  camera.position.set(w/2,h/2,Math.max(w,h)*1.45);camera.lookAt(w/2,h/2,0);
-  camera.fov=42;camera.aspect=w/h;camera.updateProjectionMatrix();
+  camera.position.set(w/2,h/2,1200);camera.lookAt(w/2,h/2,0);
+  camera.left=-w/2;camera.right=w/2;camera.top=-h/2;camera.bottom=h/2;camera.updateProjectionMatrix();
   ship.position.set(data.ship.x,h-data.ship.y,35);
   ship.userData.bank=data.bank||0;
   shield.visible=data.shield>0;
