@@ -130,7 +130,7 @@ window.galaxy3D={
   camera.position.set(0,0,1200);camera.lookAt(0,0,0);
   camera.left=-w/2;camera.right=w/2;camera.top=h/2;camera.bottom=-h/2;camera.updateProjectionMatrix();
   ship.position.set(data.ship.x-w/2,h/2-data.ship.y,35);
-  ship.userData.bank=data.bank||0;
+  ship.userData.bank=Math.PI+(data.bank||0);
   shield.visible=data.shield>0;
   for(const obj of targetMeshes.values())world.remove(obj);
   targetMeshes.clear();
