@@ -107,7 +107,7 @@ function animate(){
  requestAnimationFrame(animate);
  const time=performance.now()*.001;
  stars.rotation.y=time*.006;
- ship.rotation.z+=(Math.PI+ship.userData.bank-ship.rotation.z)*.08;
+ ship.rotation.z+=(ship.userData.bank-ship.rotation.z)*.08;
  for(const child of ship.children){if(child.userData.flame)child.userData.flame.scale.y=.75+.28*Math.sin(time*18)}
  for(const obj of targetMeshes.values()){obj.rotation.y+=.003;obj.rotation.x+=.0015}
  renderer.render(scene,camera);
