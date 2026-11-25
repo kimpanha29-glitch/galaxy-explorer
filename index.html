@@ -158,33 +158,59 @@ function event(){const names=['🌟 SUPERNOVA CHAOS','👾 ALIEN FLEET INVASION'
 function draw(){ctx.clearRect(0,0,w,h);ctx.fillStyle='#fff';for(let i=0;i<75;i++){let x=(i*173)%w,y=(i*97+Date.now()*.012)%h;ctx.globalAlpha=.25+(i%5)*.12;ctx.fillRect(x,y,1.5,1.5)}ctx.globalAlpha=1;
 if(!playing||paused){requestAnimationFrame(draw);return}
 if(keys.arrowleft||keys.a)ship.x-=ship.speed;if(keys.arrowright||keys.d)ship.x+=ship.speed;if(keys.arrowup||keys.w)ship.y-=ship.speed;if(keys.arrowdown||keys.s)ship.y+=ship.speed;ship.x=Math.max(18,Math.min(w-18,ship.x));ship.y=Math.max(35,Math.min(h-35,ship.y));if(keys[' '])shoot();
-// Larger, unmistakably 3D-style starfighter with a raised cockpit and layered armor.
-ctx.save();ctx.translate(ship.x,ship.y);
-ctx.shadowColor='#20dfff';ctx.shadowBlur=18;
-// Engine glow and twin exhausts
-const exhaust=ctx.createLinearGradient(0,12,0,43);exhaust.addColorStop(0,'#fffbd0');exhaust.addColorStop(.25,'#ffd34f');exhaust.addColorStop(.7,'#ff642e');exhaust.addColorStop(1,'rgba(255,50,20,0)');
-ctx.fillStyle=exhaust;
-for(const ex of [-9,9]){ctx.beginPath();ctx.moveTo(ex-4,13);ctx.lineTo(ex,43+Math.random()*7);ctx.lineTo(ex+4,13);ctx.closePath();ctx.fill()}
-ctx.shadowBlur=7;
-// Broad swept wings, with top and shaded underside facets
-const wing=ctx.createLinearGradient(-32,-3,30,20);wing.addColorStop(0,'#203568');wing.addColorStop(.48,'#75cfff');wing.addColorStop(1,'#253c83');
-ctx.fillStyle=wing;ctx.beginPath();ctx.moveTo(-8,-7);ctx.lineTo(-38,17);ctx.lineTo(-34,24);ctx.lineTo(-5,13);ctx.lineTo(0,5);ctx.closePath();ctx.fill();
-ctx.beginPath();ctx.moveTo(8,-7);ctx.lineTo(38,17);ctx.lineTo(34,24);ctx.lineTo(5,13);ctx.lineTo(0,5);ctx.closePath();ctx.fill();
-ctx.fillStyle='#14264f';ctx.beginPath();ctx.moveTo(-38,17);ctx.lineTo(-34,24);ctx.lineTo(-7,17);ctx.lineTo(-8,10);ctx.closePath();ctx.fill();
-ctx.beginPath();ctx.moveTo(38,17);ctx.lineTo(34,24);ctx.lineTo(7,17);ctx.lineTo(8,10);ctx.closePath();ctx.fill();
-// Three-dimensional fuselage: dark side facets and bright central armor
-ctx.fillStyle='#294477';ctx.beginPath();ctx.moveTo(0,-34);ctx.lineTo(15,-9);ctx.lineTo(12,17);ctx.lineTo(0,25);ctx.lineTo(-12,17);ctx.lineTo(-15,-9);ctx.closePath();ctx.fill();
-const body=ctx.createLinearGradient(-12,-4,13,0);body.addColorStop(0,'#426aa7');body.addColorStop(.28,'#b8eaff');body.addColorStop(.52,'#f5fdff');body.addColorStop(.76,'#79b9ee');body.addColorStop(1,'#294b86');
-ctx.fillStyle=body;ctx.beginPath();ctx.moveTo(0,-34);ctx.lineTo(10,-8);ctx.lineTo(7,15);ctx.lineTo(0,21);ctx.lineTo(-7,15);ctx.lineTo(-10,-8);ctx.closePath();ctx.fill();
-ctx.strokeStyle='#e1f8ff';ctx.lineWidth=1.4;ctx.stroke();
-// Raised glass canopy
-const canopy=ctx.createLinearGradient(-7,-26,8,-8);canopy.addColorStop(0,'#f3ffff');canopy.addColorStop(.3,'#70eaff');canopy.addColorStop(.75,'#2878c7');canopy.addColorStop(1,'#102e68');
-ctx.fillStyle=canopy;ctx.beginPath();ctx.moveTo(0,-27);ctx.quadraticCurveTo(10,-17,6,-8);ctx.lineTo(0,-4);ctx.lineTo(-6,-8);ctx.quadraticCurveTo(-10,-17,0,-27);ctx.fill();
-ctx.strokeStyle='#d9ffff';ctx.lineWidth=1;ctx.stroke();
-// Armor seams, wing lights, and nose highlight
-ctx.shadowBlur=0;ctx.strokeStyle='#d3f6ff';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-30,18);ctx.lineTo(-10,7);ctx.moveTo(30,18);ctx.lineTo(10,7);ctx.moveTo(0,-32);ctx.lineTo(0,-8);ctx.stroke();
-ctx.fillStyle='#ffdf83';for(const lx of [-31,31]){ctx.beginPath();ctx.arc(lx,18,2.5,0,Math.PI*2);ctx.fill()}
-ctx.fillStyle='#5ef5ff';ctx.beginPath();ctx.ellipse(0,-30,2,4,0,0,Math.PI*2);ctx.fill();
+// Cinematic starfighter renderer: animated thrusters, layered hull, canopy,
+ // wing armor, running lights and a reactive energy shield.
+const bank=(keys.arrowleft||keys.a)?-.16:(keys.arrowright||keys.d)?.16:0;
+const pulse=.5+.5*Math.sin(Date.now()/115);
+ctx.save();ctx.translate(ship.x,ship.y);ctx.rotate(bank);
+const enginePower=1+pulse*.32;
+// Shield bubble
+if(shield>0){
+ ctx.save();ctx.globalAlpha=.12+(.06*pulse);ctx.strokeStyle='#62dfff';ctx.lineWidth=2;
+ ctx.shadowColor='#32cfff';ctx.shadowBlur=18;ctx.beginPath();ctx.ellipse(0,0,47,52,0,0,Math.PI*2);ctx.fillStyle='#37bfff';ctx.fill();ctx.stroke();
+ ctx.globalAlpha=.48;ctx.lineWidth=1;ctx.setLineDash([5,8]);ctx.beginPath();ctx.ellipse(0,0,43,49,Date.now()/1800,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+}
+// Long twin plasma exhausts
+for(const ex of [-10,10]){
+ const flame=ctx.createLinearGradient(0,10,0,54*enginePower);
+ flame.addColorStop(0,'#f4ffff');flame.addColorStop(.18,'#68efff');flame.addColorStop(.52,'#368bff');flame.addColorStop(1,'rgba(80,90,255,0)');
+ ctx.fillStyle=flame;ctx.shadowColor='#37dfff';ctx.shadowBlur=16;
+ ctx.beginPath();ctx.moveTo(ex-4,11);ctx.quadraticCurveTo(ex-7,30,ex,54*enginePower);ctx.quadraticCurveTo(ex+7,30,ex+4,11);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#eaffff';ctx.beginPath();ctx.ellipse(ex,13,4,5,0,0,Math.PI*2);ctx.fill();
+}
+ctx.shadowBlur=0;
+// Rear stabilizers
+const metal=ctx.createLinearGradient(-34,0,34,0);metal.addColorStop(0,'#17284e');metal.addColorStop(.5,'#8bdfff');metal.addColorStop(1,'#17284e');
+ctx.fillStyle=metal;
+ctx.beginPath();ctx.moveTo(-8,4);ctx.lineTo(-27,24);ctx.lineTo(-23,5);ctx.lineTo(-13,-9);ctx.closePath();ctx.fill();
+ctx.beginPath();ctx.moveTo(8,4);ctx.lineTo(27,24);ctx.lineTo(23,5);ctx.lineTo(13,-9);ctx.closePath();ctx.fill();
+// Wide swept wings with multiple raised armor plates
+const wingGrad=ctx.createLinearGradient(-42,-5,42,25);wingGrad.addColorStop(0,'#1a2d58');wingGrad.addColorStop(.25,'#4d83bd');wingGrad.addColorStop(.52,'#c9f5ff');wingGrad.addColorStop(.78,'#4779b8');wingGrad.addColorStop(1,'#182b55');
+ctx.fillStyle=wingGrad;ctx.strokeStyle='#b5ecff';ctx.lineWidth=1.2;
+ctx.beginPath();ctx.moveTo(-7,-12);ctx.lineTo(-43,12);ctx.lineTo(-37,25);ctx.lineTo(-8,15);ctx.lineTo(0,5);ctx.closePath();ctx.fill();ctx.stroke();
+ctx.beginPath();ctx.moveTo(7,-12);ctx.lineTo(43,12);ctx.lineTo(37,25);ctx.lineTo(8,15);ctx.lineTo(0,5);ctx.closePath();ctx.fill();ctx.stroke();
+// Wing inset panels
+ctx.fillStyle='#244574';ctx.beginPath();ctx.moveTo(-35,14);ctx.lineTo(-14,2);ctx.lineTo(-10,10);ctx.lineTo(-32,21);ctx.closePath();ctx.fill();
+ctx.beginPath();ctx.moveTo(35,14);ctx.lineTo(14,2);ctx.lineTo(10,10);ctx.lineTo(32,21);ctx.closePath();ctx.fill();
+ctx.strokeStyle='#75dfff';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-38,14);ctx.lineTo(-17,4);ctx.moveTo(38,14);ctx.lineTo(17,4);ctx.stroke();
+// Main armored fuselage with shaded side faces
+ctx.fillStyle='#172b53';ctx.beginPath();ctx.moveTo(0,-39);ctx.lineTo(15,-13);ctx.lineTo(13,18);ctx.lineTo(0,29);ctx.lineTo(-13,18);ctx.lineTo(-15,-13);ctx.closePath();ctx.fill();
+const hull=ctx.createLinearGradient(-14,0,14,0);hull.addColorStop(0,'#263e70');hull.addColorStop(.22,'#70b9e8');hull.addColorStop(.47,'#f5ffff');hull.addColorStop(.68,'#8bdcff');hull.addColorStop(1,'#203966');
+ctx.fillStyle=hull;ctx.beginPath();ctx.moveTo(0,-40);ctx.lineTo(11,-13);ctx.lineTo(9,17);ctx.lineTo(0,25);ctx.lineTo(-9,17);ctx.lineTo(-11,-13);ctx.closePath();ctx.fill();
+ctx.strokeStyle='#e3fbff';ctx.lineWidth=1.6;ctx.stroke();
+// Nose armor stripe and panel seams
+ctx.fillStyle='#4b78aa';ctx.beginPath();ctx.moveTo(0,-37);ctx.lineTo(4,-15);ctx.lineTo(0,-10);ctx.lineTo(-4,-15);ctx.closePath();ctx.fill();
+ctx.strokeStyle='#bcefff';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-8,-4);ctx.lineTo(-6,14);ctx.moveTo(8,-4);ctx.lineTo(6,14);ctx.moveTo(-8,17);ctx.lineTo(0,22);ctx.lineTo(8,17);ctx.stroke();
+// Raised panoramic cockpit
+const canopy=ctx.createLinearGradient(-8,-30,8,-7);canopy.addColorStop(0,'#ffffff');canopy.addColorStop(.22,'#8ff6ff');canopy.addColorStop(.55,'#238acb');canopy.addColorStop(1,'#102650');
+ctx.fillStyle=canopy;ctx.beginPath();ctx.moveTo(0,-31);ctx.bezierCurveTo(11,-22,9,-11,0,-5);ctx.bezierCurveTo(-9,-11,-11,-22,0,-31);ctx.fill();
+ctx.strokeStyle='#dfffff';ctx.lineWidth=1.4;ctx.stroke();
+ctx.strokeStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.moveTo(-3,-26);ctx.quadraticCurveTo(-7,-18,-3,-12);ctx.stroke();
+// Glowing wing tips and nose beacon
+ctx.shadowColor='#5ceaff';ctx.shadowBlur=12;
+for(const lx of [-38,38]){ctx.fillStyle='#76faff';ctx.beginPath();ctx.arc(lx,15,3,0,Math.PI*2);ctx.fill()}
+ctx.fillStyle='#ffe9a1';ctx.beginPath();ctx.arc(0,-37,2.5,0,Math.PI*2);ctx.fill();
+ctx.shadowBlur=0;
 ctx.restore();
 bullets.forEach(b=>{b.y-=b.v;ctx.fillStyle=b.rocket?'#ff9b45':'#8ff';ctx.fillRect(b.x-(b.rocket?4:2),b.y,b.rocket?8:4,b.rocket?18:13);targets.forEach(t=>{if(Math.abs(t.x-b.x)<t.size&&Math.abs(t.y-b.y)<t.size){t.hp-=b.damage;b.y=-999;if(t.hp<=0){credits+=t.value;score+=10;shards+=t.rarity==='Transcendent'?3:0;announce(t.rarity+' '+t.name+' DESTROYED! +'+t.value+' CREDITS')}}})});bullets=bullets.filter(b=>b.y>-20);
 if(Date.now()-lastSpawn>4500 && targets.length<2){spawn();lastSpawn=Date.now()}targets.forEach(t=>{t.y+=t.speed;const objectImage=spaceImages[t.name]||blackHoleImages[t.name];const art=window.blackHoleArt;if(t.artIndex!==undefined&&art&&art.ready){const sx=(t.artIndex%3)*100,sy=Math.floor(t.artIndex/3)*100;ctx.save();ctx.beginPath();ctx.arc(t.x,t.y,t.size,0,Math.PI*2);ctx.clip();ctx.drawImage(art.image,sx,sy,100,100,t.x-t.size,t.y-t.size,t.size*2,t.size*2);ctx.restore();ctx.font='bold 11px sans-serif';ctx.fillStyle='#fff';ctx.shadowColor='#000';ctx.shadowBlur=4;ctx.fillText(t.name+' · AI CONCEPT',t.x,t.y-t.size-7);ctx.shadowBlur=0}else if(objectImage){ctx.save();ctx.beginPath();ctx.arc(t.x,t.y,t.size,0,Math.PI*2);ctx.clip();ctx.drawImage(objectImage,t.x-t.size,t.y-t.size,t.size*2,t.size*2);ctx.restore();ctx.font='bold 11px sans-serif';ctx.fillStyle='#fff';ctx.shadowColor='#000';ctx.shadowBlur=4;ctx.fillText(t.name+(youtubePlanetCrops[t.name]?' · YOUTUBE VIDEO ART':''),t.x,t.y-t.size-7);ctx.shadowBlur=0}else{ctx.font=(t.size+8)+'px sans-serif';ctx.fillText(t.emoji,t.x,t.y)};ctx.fillStyle='#222';ctx.fillRect(t.x-t.size,t.y+t.size/2,t.size*2,5);ctx.fillStyle='#6f9';ctx.fillRect(t.x-t.size,t.y+t.size/2,t.size*2*Math.max(0,t.hp/t.max),5);if(t.y>h+40){t.y=-40;t.x=Math.random()*w}if(Math.abs(t.x-ship.x)<t.size+12&&Math.abs(t.y-ship.y)<t.size+12){if(shield>0)shield=Math.max(0,shield-Math.max(1,4-armor));else hull-=Math.max(1,3-armor);t.y=-40}});targets=targets.filter(t=>t.hp>0);
