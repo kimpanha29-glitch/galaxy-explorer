@@ -77,7 +77,7 @@ starsGeo.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,
 const stars=new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0xc9d8ef,size:1.5,transparent:true,opacity:.7}));scene.add(stars);
 const targetMeshes=new Map();
 function makeTarget(t){
- const group=new THREE.Group();const isHole=/black hole|sagittarius|m87|cygnus|ton 618|phoenix|holmberg|M81\*/i.test(t.name);
+ const group=new THREE.Group();const isHole=/black hole|sagittarius|m87|cygnus|ton 618|phoenix|holmberg|M81\\*|gaia bh|v404 cygni|grs 1915|gro j1655|lmc x-1|m33 x-7|ngc 1600|ngc 4889|s5 0014|oj 287/i.test(t.name);
  const colorMap={Jupiter:0xc28c62,Saturn:0xd9c08c,Uranus:0x75b9cf,Neptune:0x3157bd,'M81 Galaxy (Bode’s Galaxy)':0x7896c8};
  const color=colorMap[t.name]|| (isHole?0x080b12:0x8a9eae);
  const sphereMat=new THREE.MeshStandardMaterial({color,roughness:.78,metalness:.05});
@@ -86,9 +86,13 @@ function makeTarget(t){
  group.userData.sphere=sphere;
  group.userData.imageName=t.name;
  if(isHole){
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(Math.max(13,t.size*.95),Math.max(2,t.size*.12),8,48),new THREE.MeshBasicMaterial({color:0xc47b42,transparent:true,opacity:.72}));
-  ring.rotation.x=.38;ring.rotation.y=.2;group.add(ring);
-  const core=new THREE.Mesh(new THREE.SphereGeometry(Math.max(6,t.size*.48),20,16),new THREE.MeshBasicMaterial({color:0x000000}));group.add(core);
+  const core=new THREE.Mesh(new THREE.SphereGeometry(Math.max(7,t.size*.48),32,24),new THREE.MeshBasicMaterial({color:0x000000}));group.add(core);
+  const disk=new THREE.Mesh(new THREE.RingGeometry(Math.max(9,t.size*.52),Math.max(16,t.size*1.32),64),new THREE.MeshBasicMaterial({color:0xe99a55,transparent:true,opacity:.82,side:THREE.DoubleSide}));
+  disk.rotation.x=Math.PI/2.35;disk.rotation.y=.18;group.add(disk);
+  const inner=new THREE.Mesh(new THREE.TorusGeometry(Math.max(10,t.size*.64),Math.max(1.5,t.size*.09),8,64),new THREE.MeshBasicMaterial({color:0xffd18a,transparent:true,opacity:.9}));
+  inner.rotation.x=Math.PI/2.35;inner.rotation.y=.18;group.add(inner);
+  const outer=new THREE.Mesh(new THREE.TorusGeometry(Math.max(15,t.size*1.02),Math.max(1.2,t.size*.045),6,64),new THREE.MeshBasicMaterial({color:0x9b5c42,transparent:true,opacity:.65}));
+  outer.rotation.x=Math.PI/2.35;outer.rotation.y=.18;group.add(outer);
  }else if(/saturn/i.test(t.name)){
   const ring=new THREE.Mesh(new THREE.TorusGeometry(t.size*1.05,t.size*.12,5,48),new THREE.MeshStandardMaterial({color:0xc9b58d,roughness:.8}));ring.rotation.x=1.15;group.add(ring);
  }else if(/galaxy|nebula/i.test(t.name)){
@@ -262,7 +266,7 @@ function shop(){ $('shopItems').innerHTML=upgrades.map((u,i)=>'<div class="item"
 shop();$('shopItems').onclick=e=>{let b=e.target.closest('[data-up]');if(!b)return;let u=upgrades[+b.dataset.up];if(credits>=u[1]){credits-=u[1];u[2]();hud();announce(u[0]+' UPGRADED!')}};$('eventItems').onclick=e=>{let b=e.target.closest('[data-re]');if(!b)return;let u=rewards[+b.dataset.re];if(shards>=u[1]){shards-=u[1];u[2]();hud();announce(u[0]+' UNLOCKED!') }};
 function hud(){ $('credits').textContent=credits;$('hull').textContent=Math.max(0,Math.round(hull));$('shield').textContent=Math.max(0,Math.round(shield));$('score').textContent=score;$('shards').textContent=shards}
 function announce(s){$('notice').textContent=s}
-function spawn(){const available=kinds.filter(k=>k[0]!=='Universe'&&!targets.some(t=>t.name===k[0]));if(!available.length)return;let k;if(!targets.some(t=>t.name==='Universe')&&Math.random()<0.002)k=kinds.find(item=>item[0]==='Universe');else k=available[Math.floor(Math.random()*available.length)];if(youtubePlanetCrops[k[0]])loadYoutubePlanetImage(k[0]);else loadSpaceImage(k[0]);const isBlackHole=/Black Hole|Sagittarius A|M87\*|Cygnus X-1|TON 618|Phoenix A|Holmberg 15A/i.test(k[0]);targets.push({artIndex:isBlackHole?(k[0]==='TON 618'?3:k[0]==='Phoenix A*'?4:Math.floor(Math.random()*5)):undefined,x:25+Math.random()*(w-50),y:-35,size:18+Math.random()*20,name:k[0],emoji:k[1],hp:k[2],max:k[2],value:k[3],rarity:k[4],speed:.08+Math.random()*.12})}
+function spawn(){const available=kinds.filter(k=>k[0]!=='Universe'&&!targets.some(t=>t.name===k[0]));if(!available.length)return;let k;if(!targets.some(t=>t.name==='Universe')&&Math.random()<0.002)k=kinds.find(item=>item[0]==='Universe');else k=available[Math.floor(Math.random()*available.length)];if(youtubePlanetCrops[k[0]])loadYoutubePlanetImage(k[0]);else loadSpaceImage(k[0]);const isBlackHole=/Black Hole|Sagittarius A|M87\\*|Cygnus X-1|TON 618|Phoenix A|Holmberg 15A|Gaia BH|V404 Cygni|GRS 1915|GRO J1655|LMC X-1|M33 X-7|NGC 1600|NGC 4889|S5 0014|OJ 287/i.test(k[0]);targets.push({artIndex:isBlackHole?(k[0]==='TON 618'?3:k[0]==='Phoenix A*'?4:Math.floor(Math.random()*5)):undefined,x:25+Math.random()*(w-50),y:-35,size:18+Math.random()*20,name:k[0],emoji:k[1],hp:k[2],max:k[2],value:k[3],rarity:k[4],speed:.08+Math.random()*.12})}
 function shoot(){let now=Date.now();if(now-lastShot<fireRate)return;lastShot=now;bullets.push({x:ship.x,y:ship.y-20,v:8,damage});if(damage>1)bullets.push({x:ship.x-12,y:ship.y-12,v:8,damage});if(damage>3||weaponLevel>=1)bullets.push({x:ship.x+12,y:ship.y-12,v:8,damage});if(weaponLevel>=2){bullets.push({x:ship.x-24,y:ship.y-8,v:8,damage});bullets.push({x:ship.x+24,y:ship.y-8,v:8,damage})}if(rocketLevel>0)bullets.push({x:ship.x,y:ship.y-24,v:10,damage:damage+rocketLevel*4,rocket:true})}
 window.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,[contenteditable=true]'))return;keys[e.key.toLowerCase()]=true;if(e.code==='Space'){e.preventDefault();if(playing&&!paused)shoot()}});window.addEventListener('keyup',e=>{if(e.target.matches('input,textarea,[contenteditable=true]'))return;keys[e.key.toLowerCase()]=false});
 function event(){const names=['🌟 SUPERNOVA CHAOS','👾 ALIEN FLEET INVASION','🌀 WORMHOLE EXPEDITION','☄️ METEOR ARMAGEDDON','🌌 GALAXY COLLISION','🕳️ BLACK HOLE APOCALYPSE'];let name=names[Math.floor(Math.random()*names.length)];announce('⚠ EVENT: '+name+' ⚠');shards+=5;eventBoss={x:w/2,y:90,hp:450,max:450};setTimeout(()=>{if(eventBoss){shards+=10;announce('EVENT CLEARED! +15 EVENT SHARDS');eventBoss=null;hud()}},25000);hud()}
