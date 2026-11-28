@@ -265,7 +265,8 @@ function loadSpaceImage(name){
   const best=items.find(item=>{
    const meta=item.data&&item.data[0]||{};
    const title=normalize(meta.title||'');
-   return (title===wanted||title.startsWith(wanted+' ')||title.includes(' '+wanted+' '))&&item.links&&item.links[0]&&item.links[0].href;
+   const isCarina= wanted==='carina nebula' && (title.includes('carina nebula')||title.includes('ngc 3324'));
+   return (isCarina||title===wanted||title.startsWith(wanted+' ')||title.includes(' '+wanted+' '))&&item.links&&item.links[0]&&item.links[0].href;
   });
   if(best){
    const img=new Image();
